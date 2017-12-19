@@ -6,6 +6,8 @@ use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Facades\Mail;
+use Naux\Mail\SendCloudTemplate;
 
 class RegisterController extends Controller
 {
@@ -62,10 +64,28 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'avatar' => '/images/avatars/default-avatar.png',
+            'confirmation_token' => str_random(40),
             'password' => bcrypt($data['password']),
         ]);
+        $this->sendVerifyEmailTo($user);
+        return $user;
+    }
+
+    public function sendVerifyEmailTo($user)
+    {
+        $data = [
+            'url' => route('email.verify', ['token' => $user->confirmation_token]),
+            'name' => $user->name
+        ];
+        $template = new SendCloudTemplate('hahn_blog_test', $data);
+
+        Mail::raw($template, function ($message) use ($user) {
+            $message->from('hahntest@usedwebtest.com', 'Hahn Laravel verigy email test');
+            $message->to($user->email);
+        });
     }
 }
