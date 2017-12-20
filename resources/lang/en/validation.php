@@ -105,6 +105,7 @@ return [
         'password' => [
             'confirmed' => '兩次密碼輸入不同',
         ],
+        'required' => ':attribute 不能為空'
     ],
 
     /*
