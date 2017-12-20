@@ -103,7 +103,7 @@ return [
             'unique' => '此信箱已註冊過',
         ],
         'password' => [
-            'confirmed' => '兩次密碼輸入不一至',
+            'confirmed' => '兩次密碼輸入不同',
         ],
     ],
 
