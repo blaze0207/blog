@@ -6,9 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Question;
 use App\Http\Requests\StoreQuestionRequest;
+use App\Topic;
 
 class QuestionsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index', 'show']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -37,12 +43,15 @@ class QuestionsController extends Controller
      */
     public function store(StoreQuestionRequest $request)
     {
+        $topics = $this->normalizeTopic($request->get('topics'));
         $data = [
             'title' => $request->title,
             'body' => $request->body,
             'user_id' => Auth::id()
         ];
         $question = Question::create($data);
+
+        $question->topics()->attach($topics);
         return redirect()->route('question.show', [$question->id]);
     }
 
@@ -54,7 +63,7 @@ class QuestionsController extends Controller
      */
     public function show($id)
     {
-        $question = Question::find($id);
+        $question = Question::where('id', $id)->with('topics')->first();
         return view('questions.show', compact('question'));
     }
 
@@ -90,5 +99,17 @@ class QuestionsController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function normalizeTopic(array $topics)
+    {
+        return collect($topics)->map(function ($topic) {
+            if (is_numeric($topic)) {
+                Topic::find($topic)->increment('questions_count');
+                return (int) $topic;
+            }
+            $newTopic = Topic::create(['name' => $topic, 'questions_count' => 1]);
+            return $newTopic->id;
+        })->toArray();
     }
 }
