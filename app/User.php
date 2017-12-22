@@ -6,11 +6,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Naux\Mail\SendCloudTemplate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Database\Eloquent\Model;
 
 class User extends Authenticatable
 {
     use Notifiable;
-    protected $fillable = ['name', 'email', 'password', 'avatar', 'confirmation_token'];
+    protected $fillable = ['name', 'email', 'password', 'avatar', 'confirmation_token', 'api_token'];
     protected $hidden = ['password', 'remember_token'];
 
     public function sendPasswordResetNotification($token)
@@ -22,5 +23,30 @@ class User extends Authenticatable
             $message->from('hahntest@usedwebtest.com', 'Reset your password!!!');
             $message->to($this->email);
         });
+    }
+
+    public function owns(Model $model)
+    {
+        return $this->id == $model->user_id;
+    }
+
+    public function answers()
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    public function follows()
+    {
+        return $this->belongsToMany(Question::class, 'user_question')->withTimestamps();
+    }
+
+    public function followThis($question)
+    {
+        return $this->follows()->toggle($question);
+    }
+
+    public function followed($question)
+    {
+        return !!$this->follows()->where('question_id', $question)->count();
     }
 }
