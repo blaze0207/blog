@@ -4,9 +4,8 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Naux\Mail\SendCloudTemplate;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
+use App\Mailer\UserMailer;
 
 class User extends Authenticatable
 {
@@ -16,13 +15,7 @@ class User extends Authenticatable
 
     public function sendPasswordResetNotification($token)
     {
-        $data = ['url' => url('password/reset', $token)];
-        $template = new SendCloudTemplate('reset_password', $data);
-
-        Mail::raw($template, function ($message) {
-            $message->from('hahntest@usedwebtest.com', 'Reset your password!!!');
-            $message->to($this->email);
-        });
+        (new UserMailer())->passwordReset($token);
     }
 
     public function owns(Model $model)

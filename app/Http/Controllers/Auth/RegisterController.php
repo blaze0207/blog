@@ -6,8 +6,7 @@ use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
-use Illuminate\Support\Facades\Mail;
-use Naux\Mail\SendCloudTemplate;
+use App\Mailer\UserMailer;
 
 class RegisterController extends Controller
 {
@@ -78,15 +77,6 @@ class RegisterController extends Controller
 
     public function sendVerifyEmailTo($user)
     {
-        $data = [
-            'url' => route('email.verify', ['token' => $user->confirmation_token]),
-            'name' => $user->name
-        ];
-        $template = new SendCloudTemplate('verify_email', $data);
-
-        Mail::raw($template, function ($message) use ($user) {
-            $message->from('hahntest@usedwebtest.com', 'Verigy your email');
-            $message->to($user->email);
-        });
+        (new UserMailer())->welcome($user);
     }
 }
